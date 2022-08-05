@@ -1,16 +1,19 @@
 import { IUser } from "../@types";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 // Exclude the password property
 export const exludePassword = (user: IUser) => {
-   const { username, email, role, createdAt } = user;
+   const { _id, username, email, role, createdAt, updatedAt } = user;
 
    return {
+      _id,
       username,
       email,
       role,
       createdAt,
+      updatedAt,
    };
 };
 
@@ -28,7 +31,7 @@ export const comparePassword = async (
 };
 
 // Generate a JWT
-export const generateToken = async (payload: number) => {
+export const generateToken = async (payload: mongoose.Types.ObjectId) => {
    return await jwt.sign({ id: payload }, process.env.JWT_SECRET as string, {
       expiresIn: "3d",
    });

@@ -8,6 +8,46 @@ import {
 } from "../utils";
 
 const userController = {
+   // get all users
+   getUsers: async (req: Request, res: Response, next: NextFunction) => {
+      try {
+         const users = await User.find({}).sort({ createdAt: "desc" });
+
+         // send back the response
+         return res.json(users);
+      } catch (err) {
+         next(err);
+      }
+   },
+
+   // update the user
+   updateUser: async (req: Request, res: Response, next: NextFunction) => {
+      try {
+         const { username, email } = req.body;
+
+         const _user = await User.findOne({ email });
+
+         if (_user && email) {
+            if (req.user !== _user.id) {
+               res.status(400);
+               throw new Error("Cette adresse email est déjà prise");
+            } else {
+               await User.findByIdAndUpdate(req.user, { username, email });
+
+               return res.json({
+                  message: "Utilisateur mis à jour avec succès",
+               });
+            }
+         } else {
+            await User.findByIdAndUpdate(req.user, { username, email });
+
+            return res.json({ message: "Utilisateur mis à jour avec succès" });
+         }
+      } catch (err) {
+         next(err);
+      }
+   },
+
    // register a new user
    register: async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -39,7 +79,7 @@ const userController = {
          // build the response object
          const _response = {
             ...exludePassword(createdUser),
-            token: await generateToken(createdUser.id),
+            token: await generateToken(createdUser._id),
          };
 
          // send back the response
@@ -78,7 +118,7 @@ const userController = {
          // build the response object
          const _response = {
             ...exludePassword(user),
-            token: await generateToken(user.id),
+            token: await generateToken(user._id),
          };
 
          // send bach the response
@@ -123,6 +163,27 @@ const userController = {
          });
 
          return res.json({ message: "Mot de passe mis à jour avec succès" });
+      } catch (err) {
+         next(err);
+      }
+   },
+
+   // get all users
+   deleteUser: async (req: Request, res: Response, next: NextFunction) => {
+      try {
+         const { id } = req.params;
+
+         const user = await User.findOne({ _id: id });
+
+         if (!user) {
+            res.status(400);
+            throw new Error("Cet utilisateur n'existe pas");
+         }
+
+         await User.findByIdAndDelete(user._id);
+
+         // send back the response
+         return res.json({ message: "Utilisateur supprimé avec succès" });
       } catch (err) {
          next(err);
       }
